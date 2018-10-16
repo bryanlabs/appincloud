@@ -4,10 +4,11 @@
 # set -x
 
 export APPNAME="changeme" #must be lowercase alphaonly.
+export STACKTYPE="spring"
 export S3BUCKET="changeme-$APPNAME"
 export EC2KeyPairName="CHANGEME"
 export DBPASSWORD="changeme" #18 digets alphanumerical
-export STACKTYPE="spring"
+
 
 
 # Check for the basics, jq, aws, svn, access keys...
@@ -48,19 +49,6 @@ else
     fi
 fi
 
-if command -v svn >/dev/null 2>&1 ; then
-    echo "found: $(aws --version)"
-else
-    if [[ -n $YUM_CMD ]]; then
-        sudo yum install -y subversion
-    elif [[ -n $APT_GET_CMD ]]; then
-        sudo apt-get install -y subversion
-    else
-        echo "Could not install aws subversion."
-        exit 1
-    fi
-fi
-
 if ! grep aws_access_key_id ~/.aws/credentials -q "aws_secret_access_key" ~/.aws/credentials
   then echo "aws appears to be misconfigured, please run  aws configure"
   exit 0
@@ -93,8 +81,6 @@ else
   # Ensure buckets in place.
   aws s3api create-bucket --bucket $S3BUCKET --acl public-read
   
-  # Update the buildspecs BASESTACK with the APPNAME.
-  sed -i "s/DYNAMIC/$APPNAME/g" buildspec.yml
 
   # Move cloudformation templates, and reposource archive to S3.
   aws s3 sync templates/ s3://$S3BUCKET --acl public-read
@@ -120,15 +106,17 @@ fi
 SSHCloneURL=$(aws cloudformation describe-stacks --stack-name $APPNAME | jq .Stacks[].Outputs | jq -r '.[] | select(.OutputKey=="SSHCloneURL") | .OutputValue')
 EnvironmentURL=$(aws cloudformation describe-stacks --stack-name $APPNAME | jq .Stacks[].Outputs | jq -r '.[] | select(.OutputKey=="EnvironmentURL") | .OutputValue')
 
-echo "###################################"
-echo "Your application will be ready soon"
-echo "###################################"
-echo ""
-echo "EnvironmentURL: $EnvironmentURL"
-
 echo "##########################"
 echo "Customise your application"
 echo "##########################"
 echo ""
 echo "SSHCloneURL: $SSHCloneURL"
+echo ""
+echo "Clone your new repo, modify buildspec, and commit your changes."
 
+echo "########################################"
+echo "Verify Code Pipeline / Elastic Beanstalk"
+echo "########################################"
+echo ""
+echo "If your application built successfully, it should be auto deployed to Beanstalk. Use the environment URL to test."
+echo "EnvironmentURL: $EnvironmentURL"
