@@ -1,0 +1,25 @@
+version: 0.2
+
+phases:
+
+  install:
+    commands:
+      - echo "Add install commands here"
+  
+  pre_build:
+    commands:
+      - echo "Add pre-build commands here"
+
+  build:
+    commands:
+      - echo "Add build commands here"
+  
+  post_build:
+    commands:
+      - echo "Add post-build commands here"
+
+# Send all files down the pipeline.
+artifacts:
+  type: zip
+  files:
+    - '**/*'
